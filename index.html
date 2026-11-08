@@ -3,35 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Asistente</title>
+<title>C.A.S.E. - Clue &amp; Analysis System Engine</title>
 <style>
-:root{--bg:#f3f6f7;--surface:#fff;--text:#16212a;--muted:#5d6b75;--border:#d9e0e4;--accent:#0e6b73;--on-accent:#fff;--user:#e2eef0;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#10171c;--surface:#18222a;--text:#e6edf1;--muted:#93a3ae;--border:#2b3944;--accent:#4fb8c2;--on-accent:#0a1418;--user:#1f2f38;color-scheme:dark}}
+:root{--bg:#eceff2;--surface:#ffffff;--text:#14202b;--muted:#566574;--border:#ccd4db;--tape:#f2c230;--ink:#14202b;--user:#dde4ea;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1419;--surface:#17212b;--text:#e8edf1;--muted:#92a2b0;--border:#2a3745;--user:#223040;color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:700px;margin:0 auto;padding:24px 16px 40px}
-h1{font-size:1.4rem;margin:0 0 4px}
-.sub{color:var(--muted);margin:0 0 18px}
-#log{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.msg{padding:10px 14px;border-radius:12px;border:1px solid var(--border);word-wrap:break-word}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.tape{height:14px;background:repeating-linear-gradient(-45deg,var(--tape) 0 14px,var(--ink) 14px 28px)}
+main{max-width:720px;margin:0 auto;padding:36px 18px 48px}
+h1{font:italic 700 clamp(1.5rem,4.6vw,2.15rem)/1.2 Georgia,"Times New Roman",serif;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 26px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+#log{display:flex;flex-direction:column;gap:14px;margin-bottom:18px}
+.msg{padding:12px 16px;border-radius:6px;word-wrap:break-word}
 .u{background:var(--user);align-self:flex-end;max-width:88%;white-space:pre-wrap}
-.a{background:var(--surface);align-self:flex-start;max-width:96%}
-.a p{margin:0 0 .65em}.a p:last-child{margin:0}
-.a ul,.a ol{margin:.3em 0 .65em;padding-left:1.4em}
-.a u{text-underline-offset:3px;text-decoration-color:var(--accent)}
-.err{color:#b3261e}
+.a{background:var(--surface);align-self:flex-start;max-width:100%;border:1px solid var(--border);border-left:5px solid var(--tape)}
+.a p{margin:0 0 .7em}.a p:last-child{margin:0}
+.a ul,.a ol{margin:.3em 0 .7em;padding-left:1.4em}.a li{margin-bottom:.25em}
+.a u{text-underline-offset:3px;text-decoration-thickness:2px;text-decoration-color:var(--tape)}
+.err{color:#c0392b;border-left-color:#c0392b}
 .row{display:flex;gap:8px}
-input{flex:1;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
-input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 18px;background:var(--accent);color:var(--on-accent);cursor:pointer}
-button:disabled{opacity:.5;cursor:default}
-.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:400;margin-top:10px}
+input{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px}
+input:focus-visible,button:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+button{font:inherit;font-weight:700;border:0;border-radius:6px;padding:12px 22px;background:var(--tape);color:var(--ink);cursor:pointer}
+button:hover:not(:disabled){filter:brightness(.95)}
+button:disabled{opacity:.55;cursor:default}
+.ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:400;margin-top:12px;padding:8px 14px}
 </style>
 </head>
 <body>
+<div class="tape" aria-hidden="true"></div>
 <main>
   <h1 id="title"></h1>
-  <p class="sub">Escribe tu pregunta y pulsa Enviar.</p>
+  <p class="sub">Escribe tu consulta y pulsa Enviar.</p>
   <div id="log" aria-live="polite"></div>
   <div class="row">
     <input id="q" type="text" placeholder="Escribe tu pregunta…" autocomplete="off">
@@ -43,10 +46,10 @@ button:disabled{opacity:.5;cursor:default}
 <script>
 /* ============ CONFIGURACIÓN (edita solo esta parte) ============ */
 const CONFIG = {
-  TITLE: "Asistente",
-  MODEL: "gemini-2.5-flash",          // modelo con nivel gratuito
-  API_KEY: "",      // clave de https://aistudio.google.com/apikey
-  PROXY_URL: "https://miasistente.alexropo2005.workers.dev",                      // opcional: URL de tu Cloudflare Worker (oculta la clave y el prompt)
+  TITLE: "C.A.S.E. - Clue & Analysis System Engine",
+  MODEL: "gemini-3.8-flash",          // modelo con nivel gratuito
+  API_KEY: "",                      // déjala vacía: la clave está en el Worker
+  PROXY_URL: "https://miasistente.alexropo2005.workers.dev",
   SYSTEM_PROMPT: ``
 };
 /* ================================================================ */
@@ -84,7 +87,7 @@ async function callGemini(contents){
   const data=await r.json().catch(()=>({}));
   if(!r.ok){
     const msg=(data.error&&data.error.message)||('Error '+r.status);
-    throw new Error(r.status===429?'Se ha alcanzado el límite gratuito. Espera un minuto e inténtalo de nuevo.':msg);
+    throw new Error(r.status===429?'Se ha alcanzado el límite gratuito. Espera un minuto e inténtalo de nuevo.':(r.status===503||r.status===504||r.status===524)?'Google está saturado o tarda demasiado ahora mismo. Inténtalo de nuevo en unos segundos.':msg);
   }
   const parts=(data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts)||[];
   const text=parts.map(p=>p.text||'').join('').trim();
